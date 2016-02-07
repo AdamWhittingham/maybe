@@ -1,0 +1,50 @@
+#!/bin/sh
+
+command="$@"
+
+declare -x CHANGE_FILE=/var/tmp/maybe.tmp
+
+cat /dev/null > "$CHANGE_FILE"
+
+echo "Running '$command'"
+(
+  function cp(){ echo "Copy $*" >> $CHANGE_FILE ;}
+  export -f cp
+
+  function mv(){ echo "Move $*" >> $CHANGE_FILE ;}
+  export -f mv
+
+  function rm(){ echo "Remove $*" >> $CHANGE_FILE ;}
+  export -f rm
+
+  function touch(){ echo "Touch $*" >> $CHANGE_FILE ;}
+  export -f touch
+
+  function chown(){ echo "Change ownership $*" >> $CHANGE_FILE ;}
+  export -f chown
+
+  function chgrp(){ echo "Change group $*" >> $CHANGE_FILE ;}
+  export -f chgrp
+
+  function chmod(){ echo "Change permissions $*" >> $CHANGE_FILE ;}
+  export -f chmod
+
+  function mkdir(){ echo "Make directory $*" >> $CHANGE_FILE ;}
+  export -f mkdir
+
+  function ln(){
+    type='hard'
+    if [[ "$1" == '-s' ]]; then
+      type='soft'
+      shift
+    fi
+    echo "Create $type link $*" >> $CHANGE_FILE
+  }
+
+  $command
+)
+
+echo "Done"
+echo "Changes:"
+
+cat $CHANGE_FILE | sed 's/.*/  &/'
